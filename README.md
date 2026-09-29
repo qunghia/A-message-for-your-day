@@ -45,3 +45,21 @@ a-message-for-your-day/
 ├── style.css
 ├── script.js
 └── README.md
+```
+
+## Built With
+- HTML5
+- CSS3
+- JavaScript
+- GitHub Pages
+
+## Note
+The daily message is stored locally in your browser.
+This means different browsers or devices may receive different messages.
+Clearing browser storage will also reset the saved daily message.
+Preview
+One message. One day.
+Come back tomorrow for another.
+
+## Author
+Made by Nghia.
