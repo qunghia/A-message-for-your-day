@@ -48,8 +48,8 @@ a-message-for-your-day/
 ```
 
 ## Built With
-- HTML5
-- CSS3
+- HTML
+- CSS
 - JavaScript
 - GitHub Pages
 
