@@ -113,82 +113,121 @@ const messages = [
 const messageButton = document.getElementById("messageButton");
 const messageBox = document.getElementById("messageBox");
 const dailyMessage = document.getElementById("dailyMessage");
+const storageNotice = document.getElementById("storageNotice");
+
+// Keep an in-memory copy so blocked or full storage never prevents a reveal.
+const memory = new Map();
+let storageAvailable = true;
+function readSaved(key) {
+  if (storageAvailable) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value !== null) memory.set(key, value);
+      else memory.delete(key);
+      return value;
+    } catch {
+      storageAvailable = false;
+      storageNotice.classList.remove("hidden");
+    }
+  }
+  return memory.get(key) ?? null;
+}
+
+function saveValue(key, value) {
+  memory.set(key, value);
+  if (storageAvailable) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      storageAvailable = false;
+      storageNotice.classList.remove("hidden");
+    }
+  }
+}
 
 function getTodayKey() {
   const now = new Date();
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 function getRandomMessage(previousMessage) {
-  let availableMessages = messages.filter(
-    message => message !== previousMessage
-  );
-
-  if (availableMessages.length === 0) {
-    availableMessages = messages;
-  }
-
-  const randomIndex = Math.floor(
-    Math.random() * availableMessages.length
-  );
-
-  return availableMessages[randomIndex];
+  const available = messages.filter(message => message !== previousMessage);
+  const pool = available.length ? available : messages;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function getMessageForToday() {
   const today = getTodayKey();
-
-  const savedDate = localStorage.getItem("messageDate");
-  const savedMessage = localStorage.getItem("dailyMessage");
-  const previousMessage = localStorage.getItem("previousMessage");
-
-  if (savedDate === today && savedMessage) {
-    return savedMessage;
-  }
-
-  if (savedMessage) {
-    localStorage.setItem("previousMessage", savedMessage);
-  }
+  const savedDate = readSaved("messageDate");
+  const savedMessage = readSaved("dailyMessage");
+  const previousMessage = readSaved("previousMessage");
+  if (savedDate === today && messages.includes(savedMessage)) return savedMessage;
 
   const lastMessage = savedMessage || previousMessage;
-
-  const newMessage = getRandomMessage(lastMessage);
-
-  localStorage.setItem("messageDate", today);
-  localStorage.setItem("dailyMessage", newMessage);
-
-  return newMessage;
+  const message = getRandomMessage(lastMessage);
+  if (lastMessage) saveValue("previousMessage", lastMessage);
+  // Store the message first so a failed write cannot mark an old message as today's.
+  saveValue("dailyMessage", message);
+  saveValue("messageDate", today);
+  return message;
 }
 
+let displayedDate = getTodayKey();
 function showMessage() {
-  const message = getMessageForToday();
-
-  dailyMessage.textContent = message;
+  refreshDate();
+  dailyMessage.textContent = getMessageForToday();
   messageBox.classList.remove("hidden");
-
-  messageButton.textContent = "You already opened today’s message";
+  messageButton.setAttribute("aria-expanded", "true");
+  messageButton.textContent = "Read today’s message again";
   messageButton.classList.add("opened");
 }
 
-messageButton.addEventListener("click", showMessage);
-
 function restoreTodayState() {
+  const savedDate = readSaved("messageDate");
+  const savedMessage = readSaved("dailyMessage");
+  messageBox.classList.add("hidden");
+  dailyMessage.textContent = "";
+  messageButton.setAttribute("aria-expanded", "false");
+  const opened = savedDate === getTodayKey() && messages.includes(savedMessage);
+  messageButton.textContent = opened ? "Open today’s message again" : "Give me my message";
+  messageButton.classList.toggle("opened", opened);
+}
+
+function refreshDate() {
   const today = getTodayKey();
-
-  const savedDate = localStorage.getItem("messageDate");
-  const savedMessage = localStorage.getItem("dailyMessage");
-
-  if (savedDate === today && savedMessage) {
-    messageBox.classList.add("hidden");
-
-    messageButton.textContent = "Open today’s message again";
-    messageButton.classList.add("opened");
+  if (today !== displayedDate) {
+    displayedDate = today;
+    restoreTodayState();
   }
 }
 
+// Recalculate local midnight each time, including across daylight-saving changes.
+let midnightTimer;
+function scheduleMidnight() {
+  clearTimeout(midnightTimer);
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  midnightTimer = setTimeout(() => {
+    refreshDate();
+    scheduleMidnight();
+  }, midnight.getTime() - now.getTime() + 50);
+}
+
+messageButton.addEventListener("click", showMessage);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    refreshDate();
+    scheduleMidnight();
+  }
+});
+window.addEventListener("focus", () => {
+  refreshDate();
+  scheduleMidnight();
+});
+window.addEventListener("storage", event => {
+  if (storageAvailable && (event.key === null || ["messageDate", "dailyMessage", "previousMessage"].includes(event.key))) {
+    restoreTodayState();
+  }
+});
 restoreTodayState();
+scheduleMidnight();

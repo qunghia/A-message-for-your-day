@@ -9,7 +9,7 @@ The message stays the same throughout the day and resets after midnight.
 
 Visit:
 
-https://qunghia.github.io/a-message-for-your-day/
+https://qunghia.github.io/A-message-for-your-day/
 
 ## Features
 
@@ -20,7 +20,10 @@ https://qunghia.github.io/a-message-for-your-day/
 - Daily message is saved using localStorage
 - Responsive design for mobile and desktop
 - Minimal black-and-white interface
-- Smooth message reveal animation
+- Smooth message reveal animation with reduced-motion support
+- Keyboard focus indicators and screen-reader message announcements
+- Automatic reset at local midnight, including when returning to an open tab
+- In-memory fallback when browser storage is unavailable
 
 ## How It Works
 
@@ -57,9 +60,15 @@ a-message-for-your-day/
 The daily message is stored locally in your browser.
 This means different browsers or devices may receive different messages.
 Clearing browser storage will also reset the saved daily message.
-Preview
-One message. One day.
-Come back tomorrow for another.
+If browser storage is blocked or full, messages remain available in memory while the page stays open. Reloading in this mode may generate a different message.
+
+## Local Preview
+
+Serve this folder with any static web server, then open it in your browser. No build step or dependencies are required.
 
 ## Author
 Made by Nghia.
+
+## Checks
+
+With Node.js installed, run `node --test script.test.cjs` to check daily persistence, date rollover, storage recovery, and tab synchronization.

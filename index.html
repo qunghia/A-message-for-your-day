@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A little encouragement, one message each day. Open your message and come back tomorrow for another.">
   <title>A Message for Today</title>
 
   <link rel="stylesheet" href="style.css">
@@ -22,14 +23,18 @@
         Come back tomorrow for another.
       </p>
 
-      <button id="messageButton">
+      <button id="messageButton" type="button" aria-controls="messageBox" aria-expanded="false">
         Give me my message
       </button>
 
       <div id="messageBox" class="message-box hidden">
-        <p id="dailyMessage"></p>
+        <p id="dailyMessage" role="status" aria-live="polite" aria-atomic="true"></p>
       </div>
 
+      <p id="storageNotice" class="storage-notice hidden" role="status">
+        Your browser cannot save this message. It will stay the same while this page is open.
+      </p>
+      <noscript><p class="storage-notice">Please enable JavaScript to open your daily message.</p></noscript>
     </section>
   </main>
 
