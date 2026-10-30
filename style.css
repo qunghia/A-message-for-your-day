@@ -24,7 +24,7 @@ body {
   padding: 24px;
 }
 
-..message-card {
+.message-card {
   width: 100%;
   max-width: 560px;
 
@@ -213,5 +213,21 @@ button.opened:hover {
 
   .message-box p {
     font-size: 20px;
+  }
+}
+button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 5px;
+}
+.storage-notice {
+  margin-top: 20px;
+  color: #b0b0b0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
